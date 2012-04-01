@@ -2,10 +2,10 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: http://yoursite.com
-title: My Octopress Blog
-subtitle: A blogging framework for hackers.
-author: Your Name
+url: http://niuyi.github.com
+title: Niu Yi's Blog
+subtitle: A Blog of Niu Yi
+author: Niu Yi
 simple_search: http://google.com/search
 description:
 
@@ -19,7 +19,7 @@ date_format: "ordinal"
 subscribe_rss: /atom.xml
 subscribe_email:
 # RSS feeds can list your email address if you like
-email:
+email: niuyi2006@hotmail.com
 
 # ----------------------- #
 #    Jekyll & Plugins     #
