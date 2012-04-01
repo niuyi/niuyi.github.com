@@ -4,7 +4,7 @@
   <title><![CDATA[Niu Yi's Blog]]></title>
   <link href="http://niuyi.github.com/atom.xml" rel="self"/>
   <link href="http://niuyi.github.com/"/>
-  <updated>2012-04-01T22:41:48+08:00</updated>
+  <updated>2012-04-01T23:06:00+08:00</updated>
   <id>http://niuyi.github.com/</id>
   <author>
     <name><![CDATA[Niu Yi]]></name>
@@ -12,5 +12,14 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/01/hello-world/"/>
+    <updated>2012-04-01T22:55:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/01/hello-world</id>
+    <content type="html"><![CDATA[<p>Hello, GitHub!</p>
+]]></content>
+  </entry>
   
 </feed>
