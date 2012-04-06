@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "在Win7下使用Octopress打造自己的blog"
+title: "Octopress + Github：打造自己的blog"
 date: 2012-04-05 20:40
 comments: true
 categories: Tools
@@ -12,6 +12,16 @@ Octopress是个基于Jekyll的Blog框架，非常的简单好用。特别的是�
 
 Octopress是基于Ruby的，所以必须要在机器上安装Ruby的环境。如果是Linux或Mac，安装要容易的多，可以参考Octopress官方网站上的说明。这里着重介绍下在Win7下的安装方法：
 在Win7下安装需要下载这两个东东：rubyinstaller和DevKit。Ruby的版本必须是1.9.2以上版本。需要将ruby的主目录（如D:\Ruby193）添加到Windows环境变量Path里。
+
+<h5>Windows下DevKit的安装方法：</h5>
+```
+cd <DEVKIT_INSTALL_DIR>
+ruby dk.rb init
+ruby dk.rb install
+#check
+gem install rdiscount --platform=ruby
+```
+
 安装完成后，可以在命令行里运行如下命令测试：
 ```
 ruby --version  # Should report Ruby 1.9.2
@@ -71,15 +81,19 @@ rake watch      # Watches source/ and sass/ for changes and regenerates
 rake preview
 ```
 
-<h4>中文问题</h4>
+<h4>Step 6: 定制自己的Blog</h4>
+<h5>中文问题</h5>
 在Win7下，Octopress的中文经常有问题。网上有很多解决方案，我的方案是在文本编辑器里选择UTF-8无BOM格式编码，就可以支持中文了。
-<h4>侧边栏</h4>
+<h5>侧边栏</h5>
 Octopress中可以添加自定义的侧边栏，在source/includes/custom/asides/里已经有个about.html，可以编辑这个文件添加个人介绍。然后在config.yml里的default_asides:加上custom/asides/about.html就可以在侧边栏里显示出来。
 
-<h4>评论</h4>
+<h5>评论</h5>
 评论是基于disqus提供的服务。先在disqus上注册，然后在_config.yml里找到相关部分添加上内容既可：
 ```
 # Disqus Comments
 disqus_short_name: 
 disqus_show_comment_count: true
 ```
+
+<h5>新浪微博的加关注</h5>
+参考这篇<a href="http://blog.tingkun.com/blog/2011/11/05/xin-lang-wei-bo-ce-lan-widgetding-zhi-octopress/">Blog</a>
