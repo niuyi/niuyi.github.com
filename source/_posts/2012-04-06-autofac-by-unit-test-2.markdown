@@ -3,7 +3,7 @@ layout: post
 title: "AutoFac使用方法总结:Part II"
 date: 2012-04-06 23:38
 comments: true
-categories: 
+categories: c#
 ---
 <h3>事件</h3>
 AutoFac支持三种事件：OnActivating，OnActivated，OnRelease。OnActivating在注册组件使用之前会被调用，此时可以替换实现类或者进行一些其他的初始化工作，OnActivated在实例化之后会被调用，OnRelease在组件释放之后会被调用。

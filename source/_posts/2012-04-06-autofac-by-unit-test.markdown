@@ -3,7 +3,7 @@ layout: post
 title: "AutoFac使用方法总结:Part I"
 date: 2012-04-06 23:07
 comments: true
-categories: 
+categories: c#
 ---
 
 AutoFac是.net平台下的IOC容器产品，它可以管理类之间的复杂的依赖关系。在使用方面主要是register和resolve两类操作。
