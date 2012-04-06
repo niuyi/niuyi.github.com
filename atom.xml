@@ -4,7 +4,7 @@
   <title><![CDATA[Niu Yi's Blog]]></title>
   <link href="http://niuyi.github.com/atom.xml" rel="self"/>
   <link href="http://niuyi.github.com/"/>
-  <updated>2012-04-06T22:44:32+08:00</updated>
+  <updated>2012-04-07T00:00:11+08:00</updated>
   <id>http://niuyi.github.com/</id>
   <author>
     <name><![CDATA[Niu Yi]]></name>
@@ -12,6 +12,775 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[AutoFac使用方法总结:Part III]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/06/autofact-by-unit-test3/"/>
+    <updated>2012-04-06T23:48:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/06/autofact-by-unit-test3</id>
+    <content type="html"><![CDATA[<h3>生命周期</h3>
+
+
+<p>AutoFac中的生命周期概念非常重要，AutoFac也提供了强大的生命周期管理的能力。</p>
+
+<!-- more -->
+
+
+<p>AutoFac定义了三种生命周期：</p>
+
+<pre><code>Per Dependency
+Single Instance
+Per Lifetime Scope
+</code></pre>
+
+<p>Per Dependency为默认的生命周期，也被称为&#8217;transient&#8217;或&#8217;factory&#8217;，其实就是每次请求都创建一个新的对象</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">per_dependency</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;().</span><span class="n">InstancePerDependency</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass1</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass2</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotEqual</span><span class="p">(</span><span class="n">myClass1</span><span class="p">,</span><span class="n">myClass2</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Single Instance也很好理解，就是每次都用同一个对象</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">single_instance</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;().</span><span class="n">SingleInstance</span><span class="p">();</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass1</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass2</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="n">myClass1</span><span class="p">,</span><span class="n">myClass2</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Per Lifetime Scope，同一个Lifetime生成的对象是同一个实例</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">per_lifetime_scope</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;().</span><span class="n">InstancePerLifetimeScope</span><span class="p">();</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass1</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass2</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="n">ILifetimeScope</span> <span class="n">inner</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">BeginLifetimeScope</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass3</span> <span class="p">=</span> <span class="n">inner</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass4</span> <span class="p">=</span> <span class="n">inner</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="n">myClass1</span><span class="p">,</span><span class="n">myClass2</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotEqual</span><span class="p">(</span><span class="n">myClass2</span><span class="p">,</span><span class="n">myClass3</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="n">myClass3</span><span class="p">,</span><span class="n">myClass4</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">   [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">life_time_and_dispose</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">Disposable</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">using</span> <span class="p">(</span><span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">())</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="kt">var</span> <span class="n">outInstance</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">Disposable</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">NamedParameter</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;out&quot;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">inner</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">BeginLifetimeScope</span><span class="p">())</span>
+</span><span class='line'>            <span class="p">{</span>
+</span><span class='line'>                <span class="kt">var</span> <span class="n">inInstance</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">Disposable</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">NamedParameter</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;in&quot;</span><span class="p">));</span>
+</span><span class='line'>            <span class="p">}</span><span class="c1">//inInstance dispose here</span>
+</span><span class='line'>        <span class="p">}</span><span class="c1">//out dispose here</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AutoFac使用方法总结:Part II]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test-2/"/>
+    <updated>2012-04-06T23:38:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test-2</id>
+    <content type="html"><![CDATA[<h3>事件</h3>
+
+
+<p>AutoFac支持三种事件：OnActivating，OnActivated，OnRelease。OnActivating在注册组件使用之前会被调用，此时可以替换实现类或者进行一些其他的初始化工作，OnActivated在实例化之后会被调用，OnRelease在组件释放之后会被调用。</p>
+
+<!-- more -->
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'>   <span class="k">public</span> <span class="k">class</span> <span class="nc">MyEvent</span> <span class="p">:</span> <span class="n">IDisposable</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="k">public</span> <span class="nf">MyEvent</span><span class="p">(</span><span class="kt">string</span> <span class="n">input</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">public</span> <span class="nf">MyEvent</span><span class="p">()</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Init&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">public</span> <span class="k">void</span> <span class="nf">Dispose</span><span class="p">()</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Dispose&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'>   <span class="k">public</span> <span class="k">void</span> <span class="nf">test_event</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyEvent</span><span class="p">&gt;().</span>
+</span><span class='line'>            <span class="n">OnActivating</span><span class="p">(</span><span class="n">e</span> <span class="p">=&gt;</span> <span class="n">e</span><span class="p">.</span><span class="n">ReplaceInstance</span><span class="p">(</span><span class="k">new</span> <span class="n">MyEvent</span><span class="p">(</span><span class="s">&quot;input&quot;</span><span class="p">))).</span>
+</span><span class='line'>            <span class="n">OnActivated</span><span class="p">(</span><span class="n">e</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;OnActivated&quot;</span><span class="p">)).</span>
+</span><span class='line'>            <span class="n">OnRelease</span><span class="p">(</span><span class="n">e</span> <span class="p">=&gt;</span> <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;OnRelease&quot;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">using</span> <span class="p">(</span><span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">())</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">myEvent</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyEvent</span><span class="p">&gt;())</span>
+</span><span class='line'>            <span class="p">{</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>
+此时的输出为：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="n">Init</span>
+</span><span class='line'><span class="n">input</span>
+</span><span class='line'><span class="n">OnActivated</span>
+</span><span class='line'><span class="n">Dispose</span>
+</span><span class='line'><span class="n">OnRelease</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>
+利用事件可以在构造对象之后调用对象的方法：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">call_method_when_init</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClassWithMethod</span><span class="p">&gt;().</span><span class="n">OnActivating</span><span class="p">(</span><span class="n">e</span> <span class="p">=&gt;</span> <span class="n">e</span><span class="p">.</span><span class="n">Instance</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="m">5</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="m">5</span><span class="p">,</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClassWithMethod</span><span class="p">&gt;().</span><span class="n">Index</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="k">public</span> <span class="k">class</span> <span class="nc">MyClassWithMethod</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="k">public</span> <span class="kt">int</span> <span class="n">Index</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>      <span class="k">public</span> <span class="k">void</span> <span class="nf">Add</span><span class="p">(</span><span class="kt">int</span> <span class="k">value</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="n">Index</span> <span class="p">=</span> <span class="n">Index</span> <span class="p">+</span> <span class="k">value</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>循环依赖</h3>
+
+
+<p>循环依赖是个比较头疼的问题，在AutoFac中很多循环依赖的场景不被支持：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'>   <span class="k">public</span> <span class="k">class</span> <span class="nc">ClassA</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="k">private</span> <span class="k">readonly</span> <span class="n">ClassB</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">public</span> <span class="nf">ClassA</span><span class="p">(</span><span class="n">ClassB</span> <span class="n">b</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="k">this</span><span class="p">.</span><span class="n">b</span> <span class="p">=</span> <span class="n">b</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">public</span> <span class="k">class</span> <span class="nc">ClassB</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="k">public</span> <span class="n">ClassA</span> <span class="n">A</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="na"> </span>
+</span><span class='line'><span class="na"> [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">circular_dependencies_exception</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">ClassB</span><span class="p">(){</span><span class="n">A</span> <span class="p">=</span> <span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassA</span><span class="p">&gt;()});</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">ClassA</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassB</span><span class="p">&gt;()));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Throws</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">DependencyResolutionException</span><span class="p">),</span> <span class="p">()=&gt;</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassA</span><span class="p">&gt;());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以部分的解决这种循环依赖的问题，前提是ClassA和ClassB的生命周期不能都是InstancePerDependency</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">circular_dependencies_ok</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">ClassB</span><span class="p">&gt;().</span>
+</span><span class='line'>            <span class="n">PropertiesAutowired</span><span class="p">(</span><span class="n">PropertyWiringFlags</span><span class="p">.</span><span class="n">AllowCircularDependencies</span><span class="p">).</span><span class="n">SingleInstance</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">ClassA</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassB</span><span class="p">&gt;()));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassA</span><span class="p">&gt;());</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassB</span><span class="p">&gt;());</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">ClassB</span><span class="p">&gt;().</span><span class="n">A</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AutoFac使用方法总结:Part I]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test/"/>
+    <updated>2012-04-06T23:07:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test</id>
+    <content type="html"><![CDATA[<p>AutoFac是.net平台下的IOC容器产品，它可以管理类之间的复杂的依赖关系。在使用方面主要是register和resolve两类操作。
+这篇文章用单元测试的形式列举了AutoFac的常用使用方法：</p>
+
+<!-- more -->
+
+
+<h3>注册部分</h3>
+
+
+<p>使用RegisterType进行注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">can_resolve_myclass</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注册为接口</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_as_interface</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">()).</span><span class="n">As</span><span class="p">&lt;</span><span class="n">MyInterface</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyInterface</span><span class="p">&gt;());</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Throws</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">ComponentNotRegisteredException</span><span class="p">),</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>使用lambda表达式进行注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">can_register_with_lambda</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>带构造参数的注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_parameter</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyParameter</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyParameter</span><span class="p">&gt;()));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;());</span>
+</span><span class='line'>    <span class="p">}</span>  
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>带属性赋值的注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_property</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyProperty</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span>
+</span><span class='line'>            <span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">()</span>
+</span><span class='line'>                     <span class="p">{</span>
+</span><span class='line'>                         <span class="n">Property</span> <span class="p">=</span> <span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyProperty</span><span class="p">&gt;()</span>
+</span><span class='line'>                     <span class="p">});</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">.</span><span class="n">Property</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>      
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Autofac分离了类的创建和使用，这样可以根据输入参数（NamedParameter）动态的选择实现类。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">select_an_implementer_based_on_parameter_value</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;((</span><span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'>                             <span class="p">{</span>
+</span><span class='line'>                                 <span class="kt">var</span> <span class="n">type</span> <span class="p">=</span> <span class="n">p</span><span class="p">.</span><span class="n">Named</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;type&quot;</span><span class="p">);</span>
+</span><span class='line'>                                 <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="p">==</span> <span class="s">&quot;test&quot;</span><span class="p">)</span>
+</span><span class='line'>                                 <span class="p">{</span>
+</span><span class='line'>                                     <span class="k">return</span> <span class="k">new</span> <span class="nf">TestRepository</span><span class="p">();</span>
+</span><span class='line'>                                 <span class="p">}</span>
+</span><span class='line'>                                 <span class="k">else</span>
+</span><span class='line'>                                 <span class="p">{</span>
+</span><span class='line'>                                     <span class="k">return</span> <span class="k">new</span> <span class="nf">DbRepository</span><span class="p">();</span>
+</span><span class='line'>                                 <span class="p">}</span>
+</span><span class='line'>                             <span class="p">}).</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">NamedParameter</span><span class="p">(</span><span class="s">&quot;type&quot;</span><span class="p">,</span> <span class="s">&quot;test&quot;</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">TestRepository</span><span class="p">),</span><span class="n">repository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>AufoFac也可以用一个实例来注册，比如用在单例模式情况下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_instance</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterInstance</span><span class="p">(</span><span class="n">MyInstance</span><span class="p">.</span><span class="n">Instance</span><span class="p">).</span><span class="n">ExternallyOwned</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myInstance1</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyInstance</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myInstance2</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyInstance</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="n">myInstance1</span><span class="p">,</span><span class="n">myInstance2</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注册open generic类型</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_open_generic</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterGeneric</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">MyList</span><span class="p">&lt;&gt;));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myIntList</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyList</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myIntList</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myStringList</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyList</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myStringList</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>对于同一个接口，后面注册的实现会覆盖之前的实现</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_order</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">containerBuilder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DbRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">TestRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">containerBuilder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">TestRepository</span><span class="p">),</span> <span class="n">repository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果不想覆盖的话，可以用PreserveExistingDefaults，这样会保留原来注册的实现。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_order_defaults</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">containerBuilder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DbRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">TestRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;().</span><span class="n">PreserveExistingDefaults</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">containerBuilder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">DbRepository</span><span class="p">),</span> <span class="n">repository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以用Name来区分不同的实现，代替As方法</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_name</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">containerBuilder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DbRepository</span><span class="p">&gt;().</span><span class="n">Named</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;DB&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">TestRepository</span><span class="p">&gt;().</span><span class="n">Named</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;Test&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">containerBuilder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">dbRepository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">ResolveNamed</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;DB&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">testRepository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">ResolveNamed</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;Test&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">DbRepository</span><span class="p">),</span> <span class="n">dbRepository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">TestRepository</span><span class="p">),</span> <span class="n">testRepository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果一个类有多个构造函数的话，可以在注册时候选择不同的构造函数</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">choose_constructors</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyParameter</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;().</span><span class="n">UsingConstructor</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">MyParameter</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>AutoFac可以注册一个Assemble下所有的类，当然，也可以根据类型进行筛选</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_assembly</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterAssemblyTypes</span><span class="p">(</span><span class="n">Assembly</span><span class="p">.</span><span class="n">GetExecutingAssembly</span><span class="p">()).</span>
+</span><span class='line'>            <span class="n">Where</span><span class="p">(</span><span class="n">t</span> <span class="p">=&gt;</span> <span class="n">t</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="n">EndsWith</span><span class="p">(</span><span class="s">&quot;Repository&quot;</span><span class="p">)).</span>
+</span><span class='line'>            <span class="n">AsImplementedInterfaces</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">repository</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Octopress + Github：打造自己的blog]]></title>

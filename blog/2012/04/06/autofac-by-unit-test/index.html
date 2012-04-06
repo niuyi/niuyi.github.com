@@ -1,0 +1,664 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>AutoFac使用方法总结:Part I - Niu Yi's Blog</title>
+  <meta name="author" content="Niu Yi">
+
+  
+  <meta name="description" content="AutoFac是.net平台下的IOC容器产品，它可以管理类之间的复杂的依赖关系。在使用方面主要是register和resolve两类操作。
+这篇文章用单元测试的形式列举了AutoFac的常用使用方法： 注册部分 使用RegisterType进行注册 1
+2
+3
+4
+5
+6
+7
+8
+9
+10 [ &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Niu Yi's Blog" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Niu Yi's Blog</a></h1>
+  
+    <h2>如此这般，这般如此</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:niuyi.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">AutoFac使用方法总结:Part I</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-06T23:07:00+08:00" pubdate data-updated="true">Apr 6<span>th</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>AutoFac是.net平台下的IOC容器产品，它可以管理类之间的复杂的依赖关系。在使用方面主要是register和resolve两类操作。
+这篇文章用单元测试的形式列举了AutoFac的常用使用方法：</p>
+
+<!-- more -->
+
+
+<h3>注册部分</h3>
+
+
+<p>使用RegisterType进行注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">can_resolve_myclass</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注册为接口</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_as_interface</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">()).</span><span class="n">As</span><span class="p">&lt;</span><span class="n">MyInterface</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyInterface</span><span class="p">&gt;());</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Throws</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">ComponentNotRegisteredException</span><span class="p">),</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>使用lambda表达式进行注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">can_register_with_lambda</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>带构造参数的注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_parameter</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyParameter</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyParameter</span><span class="p">&gt;()));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;());</span>
+</span><span class='line'>    <span class="p">}</span>  
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>带属性赋值的注册</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_property</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyProperty</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span>
+</span><span class='line'>            <span class="n">c</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="n">MyClass</span><span class="p">()</span>
+</span><span class='line'>                     <span class="p">{</span>
+</span><span class='line'>                         <span class="n">Property</span> <span class="p">=</span> <span class="n">c</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyProperty</span><span class="p">&gt;()</span>
+</span><span class='line'>                     <span class="p">});</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">.</span><span class="n">Property</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>      
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Autofac分离了类的创建和使用，这样可以根据输入参数（NamedParameter）动态的选择实现类。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">select_an_implementer_based_on_parameter_value</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">Register</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;((</span><span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">=&gt;</span>
+</span><span class='line'>                             <span class="p">{</span>
+</span><span class='line'>                                 <span class="kt">var</span> <span class="n">type</span> <span class="p">=</span> <span class="n">p</span><span class="p">.</span><span class="n">Named</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;(</span><span class="s">&quot;type&quot;</span><span class="p">);</span>
+</span><span class='line'>                                 <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="p">==</span> <span class="s">&quot;test&quot;</span><span class="p">)</span>
+</span><span class='line'>                                 <span class="p">{</span>
+</span><span class='line'>                                     <span class="k">return</span> <span class="k">new</span> <span class="nf">TestRepository</span><span class="p">();</span>
+</span><span class='line'>                                 <span class="p">}</span>
+</span><span class='line'>                                 <span class="k">else</span>
+</span><span class='line'>                                 <span class="p">{</span>
+</span><span class='line'>                                     <span class="k">return</span> <span class="k">new</span> <span class="nf">DbRepository</span><span class="p">();</span>
+</span><span class='line'>                                 <span class="p">}</span>
+</span><span class='line'>                             <span class="p">}).</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="k">new</span> <span class="n">NamedParameter</span><span class="p">(</span><span class="s">&quot;type&quot;</span><span class="p">,</span> <span class="s">&quot;test&quot;</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">TestRepository</span><span class="p">),</span><span class="n">repository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>AufoFac也可以用一个实例来注册，比如用在单例模式情况下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_instance</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterInstance</span><span class="p">(</span><span class="n">MyInstance</span><span class="p">.</span><span class="n">Instance</span><span class="p">).</span><span class="n">ExternallyOwned</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myInstance1</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyInstance</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myInstance2</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyInstance</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="n">myInstance1</span><span class="p">,</span><span class="n">myInstance2</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注册open generic类型</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_open_generic</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterGeneric</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">MyList</span><span class="p">&lt;&gt;));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myIntList</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyList</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myIntList</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myStringList</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyList</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myStringList</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>对于同一个接口，后面注册的实现会覆盖之前的实现</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_order</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">containerBuilder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DbRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">TestRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">containerBuilder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">TestRepository</span><span class="p">),</span> <span class="n">repository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果不想覆盖的话，可以用PreserveExistingDefaults，这样会保留原来注册的实现。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_order_defaults</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">containerBuilder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DbRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">TestRepository</span><span class="p">&gt;().</span><span class="n">As</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;().</span><span class="n">PreserveExistingDefaults</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">containerBuilder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">DbRepository</span><span class="p">),</span> <span class="n">repository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以用Name来区分不同的实现，代替As方法</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_with_name</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">containerBuilder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">DbRepository</span><span class="p">&gt;().</span><span class="n">Named</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;DB&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">containerBuilder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">TestRepository</span><span class="p">&gt;().</span><span class="n">Named</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;Test&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">containerBuilder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">dbRepository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">ResolveNamed</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;DB&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">testRepository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">ResolveNamed</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;(</span><span class="s">&quot;Test&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">DbRepository</span><span class="p">),</span> <span class="n">dbRepository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">Equal</span><span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="n">TestRepository</span><span class="p">),</span> <span class="n">testRepository</span><span class="p">.</span><span class="n">GetType</span><span class="p">());</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果一个类有多个构造函数的话，可以在注册时候选择不同的构造函数</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">choose_constructors</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyParameter</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterType</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;().</span><span class="n">UsingConstructor</span><span class="p">(</span><span class="k">typeof</span> <span class="p">(</span><span class="n">MyParameter</span><span class="p">));</span>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">myClass</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">MyClass</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">myClass</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>AutoFac可以注册一个Assemble下所有的类，当然，也可以根据类型进行筛选</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c#'><span class='line'><span class="na">  [Fact]</span>
+</span><span class='line'>    <span class="k">public</span> <span class="k">void</span> <span class="nf">register_assembly</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">builder</span> <span class="p">=</span> <span class="k">new</span> <span class="n">ContainerBuilder</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">builder</span><span class="p">.</span><span class="n">RegisterAssemblyTypes</span><span class="p">(</span><span class="n">Assembly</span><span class="p">.</span><span class="n">GetExecutingAssembly</span><span class="p">()).</span>
+</span><span class='line'>            <span class="n">Where</span><span class="p">(</span><span class="n">t</span> <span class="p">=&gt;</span> <span class="n">t</span><span class="p">.</span><span class="n">Name</span><span class="p">.</span><span class="n">EndsWith</span><span class="p">(</span><span class="s">&quot;Repository&quot;</span><span class="p">)).</span>
+</span><span class='line'>            <span class="n">AsImplementedInterfaces</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">IContainer</span> <span class="n">container</span> <span class="p">=</span> <span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">var</span> <span class="n">repository</span> <span class="p">=</span> <span class="n">container</span><span class="p">.</span><span class="n">Resolve</span><span class="p">&lt;</span><span class="n">IRepository</span><span class="p">&gt;();</span>
+</span><span class='line'>        <span class="n">Assert</span><span class="p">.</span><span class="n">NotNull</span><span class="p">(</span><span class="n">repository</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Niu Yi</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-06T23:07:00+08:00" pubdate data-updated="true">Apr 6<span>th</span>, 2012</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test/" data-via="" data-counturl="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/04/05/how-to-use-octopress-in-win7/" title="Previous Post: Octopress + Github：打造自己的blog">&laquo; Octopress + Github：打造自己的blog</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/04/06/autofac-by-unit-test-2/" title="Next Post: AutoFac使用方法总结:Part II">AutoFac使用方法总结:Part II &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>About Me</h1>
+  <p><b>牛毅，住在北京，就职于ThoughtWorks</b></p>
+</section>
+<section id="comment_sidebar">
+  <h1>评论</h1>
+  <div id="recentcomments" class="dsq-widget"><h2 class="dsq-widget-title">Recent Comments</h2><script type="text/javascript" src="http://niuyi.disqus.com/recent_comments_widget.js?num_items=5&hide_avatars=1&avatar_size=32&excerpt_length=200"></script></div><a href="http://disqus.com/">Powered by Disqus</a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/04/06/autofact-by-unit-test3/">AutoFac使用方法总结:Part III</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/04/06/autofac-by-unit-test-2/">AutoFac使用方法总结:Part II</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/04/06/autofac-by-unit-test/">AutoFac使用方法总结:Part I</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/04/05/how-to-use-octopress-in-win7/">Octopress + Github：打造自己的blog</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/04/01/hello-world/">Hello World</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+<h1>加关注</h1>
+ <p>
+<a  id="hover_pop" href="http://weibo.com/tingkunz"  wb_user_id="1784430713" >niuyi_tw<span id="wb_follow_btn"> </a>
+  </p>
+  <script src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=1166443256" type="text/javascript"> </script>
+  <script type="text/javascript">
+  WB2.anyWhere(function(W){
+      W.widget.hoverCard({
+          id: "hover_pop"
+          });
+
+
+      W.widget.followButton({
+      uid: '1784430713',
+      id: "wb_follow_btn"
+        });
+      });
+
+  </script>
+</section>
+
+
+
+<section>
+  <!-- JiaThis Button BEGIN -->
+<div id="jiathis_style_32x32">
+	<a class="jiathis_button_tsina"></a>
+	<a class="jiathis_button_tqq"></a>
+</div>
+<script type="text/javascript" src="http://v2.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Niu Yi -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'niuyi';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test/';
+        var disqus_url = 'http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
