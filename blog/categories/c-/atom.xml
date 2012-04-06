@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: c# | Niu Yi's Blog]]></title>
+  <link href="http://niuyi.github.com/blog/categories/c-/atom.xml" rel="self"/>
+  <link href="http://niuyi.github.com/"/>
+  <updated>2012-04-07T00:13:42+08:00</updated>
+  <id>http://niuyi.github.com/</id>
+  <author>
+    <name><![CDATA[Niu Yi]]></name>
+    <email><![CDATA[niuyi2006@hotmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[AutoFac使用方法总结:Part III]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/06/autofact-by-unit-test3/"/>
+    <updated>2012-04-06T23:48:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/06/autofact-by-unit-test3</id>
+    <content type="html"><![CDATA[<h3>生命周期</h3>
+
+
+<p>AutoFac中的生命周期概念非常重要，AutoFac也提供了强大的生命周期管理的能力。</p>
+
+<!-- more -->
+
+
+<p>AutoFac定义了三种生命周期：</p>
+
+<pre><code>Per Dependency
+Single Instance
+Per Lifetime Scope
+</code></pre>
+
+<p>Per Dependency为默认的生命周期，也被称为'transient'或'factory'，其实就是每次请求都创建一个新的对象
+``` c#</p>
+
+<pre><code>    [Fact]
+    public void per_dependency()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyClass&gt;().InstancePerDependency();
+        IContainer container = builder.Build();
+        var myClass1 = container.Resolve&lt;MyClass&gt;();
+        var myClass2 = container.Resolve&lt;MyClass&gt;();
+        Assert.NotEqual(myClass1,myClass2);
+    }
+</code></pre>
+
+<p><code>
+Single Instance也很好理解，就是每次都用同一个对象
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void single_instance()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyClass&gt;().SingleInstance();
+
+        IContainer container = builder.Build();
+        var myClass1 = container.Resolve&lt;MyClass&gt;();
+        var myClass2 = container.Resolve&lt;MyClass&gt;();
+
+        Assert.Equal(myClass1,myClass2);
+    }
+</code></pre>
+
+<p><code>
+Per Lifetime Scope，同一个Lifetime生成的对象是同一个实例
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void per_lifetime_scope()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyClass&gt;().InstancePerLifetimeScope();
+
+        IContainer container = builder.Build();
+        var myClass1 = container.Resolve&lt;MyClass&gt;();
+        var myClass2 = container.Resolve&lt;MyClass&gt;();
+
+        ILifetimeScope inner = container.BeginLifetimeScope();
+        var myClass3 = inner.Resolve&lt;MyClass&gt;();
+        var myClass4 = inner.Resolve&lt;MyClass&gt;();
+
+        Assert.Equal(myClass1,myClass2);
+        Assert.NotEqual(myClass2,myClass3);
+        Assert.Equal(myClass3,myClass4);
+    }
+</code></pre>
+
+<p><code>
+</code> c#</p>
+
+<pre><code>     [Fact]
+    public void life_time_and_dispose()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;Disposable&gt;();
+
+        using (IContainer container = builder.Build())
+        {
+            var outInstance = container.Resolve&lt;Disposable&gt;(new NamedParameter("name", "out"));
+
+            using(var inner = container.BeginLifetimeScope())
+            {
+                var inInstance = container.Resolve&lt;Disposable&gt;(new NamedParameter("name", "in"));
+            }//inInstance dispose here
+        }//out dispose here
+    }
+</code></pre>
+
+<p>```</p>
+]]></content>
+  </entry>
+  
+</feed>
