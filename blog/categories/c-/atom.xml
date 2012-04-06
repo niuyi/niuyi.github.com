@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c# | Niu Yi's Blog]]></title>
   <link href="http://niuyi.github.com/blog/categories/c-/atom.xml" rel="self"/>
   <link href="http://niuyi.github.com/"/>
-  <updated>2012-04-07T00:13:42+08:00</updated>
+  <updated>2012-04-07T00:16:00+08:00</updated>
   <id>http://niuyi.github.com/</id>
   <author>
     <name><![CDATA[Niu Yi]]></name>
@@ -108,6 +108,400 @@ Per Lifetime Scope，同一个Lifetime生成的对象是同一个实例
                 var inInstance = container.Resolve&lt;Disposable&gt;(new NamedParameter("name", "in"));
             }//inInstance dispose here
         }//out dispose here
+    }
+</code></pre>
+
+<p>```</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AutoFac使用方法总结:Part II]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test-2/"/>
+    <updated>2012-04-06T23:38:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test-2</id>
+    <content type="html"><![CDATA[<h3>事件</h3>
+
+
+<p>AutoFac支持三种事件：OnActivating，OnActivated，OnRelease。OnActivating在注册组件使用之前会被调用，此时可以替换实现类或者进行一些其他的初始化工作，OnActivated在实例化之后会被调用，OnRelease在组件释放之后会被调用。</p>
+
+<!-- more -->
+
+
+<p>``` c#</p>
+
+<pre><code>    public class MyEvent : IDisposable
+    {
+        public MyEvent(string input)
+        {
+            Console.WriteLine(input);
+        }
+
+        public MyEvent()
+        {
+            Console.WriteLine("Init");
+        }
+
+        public void Dispose()
+        {
+            Console.WriteLine("Dispose");
+        }
+    }
+</code></pre>
+
+<p><code>
+</code> c#</p>
+
+<pre><code>    public void test_event()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyEvent&gt;().
+            OnActivating(e =&gt; e.ReplaceInstance(new MyEvent("input"))).
+            OnActivated(e =&gt; Console.WriteLine("OnActivated")).
+            OnRelease(e =&gt; Console.WriteLine("OnRelease"));
+
+
+        using (IContainer container = builder.Build())
+        {
+            using (var myEvent = container.Resolve&lt;MyEvent&gt;())
+            {
+            }
+        }
+    }
+</code></pre>
+
+<p><code>
+此时的输出为：
+</code>
+Init
+input
+OnActivated
+Dispose
+OnRelease
+<code>
+利用事件可以在构造对象之后调用对象的方法：
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void call_method_when_init()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyClassWithMethod&gt;().OnActivating(e =&gt; e.Instance.Add(5));
+        IContainer container = builder.Build();
+        Assert.Equal(5, container.Resolve&lt;MyClassWithMethod&gt;().Index);
+    }
+    public class MyClassWithMethod
+    {
+        public int Index { get; set; }
+        public void Add(int value)
+        {
+            Index = Index + value;
+        }
+    }
+</code></pre>
+
+<p>```</p>
+
+<h3>循环依赖</h3>
+
+
+<p>循环依赖是个比较头疼的问题，在AutoFac中很多循环依赖的场景不被支持：
+``` c#</p>
+
+<pre><code>    public class ClassA
+    {
+        private readonly ClassB b;
+
+        public ClassA(ClassB b)
+        {
+            this.b = b;
+        }
+    }
+
+    public class ClassB
+    {
+        public ClassA A { get; set; }
+
+    }
+
+    [Fact]
+    public void circular_dependencies_exception()
+    {
+        var builder = new ContainerBuilder();
+        builder.Register(c =&gt; new ClassB(){A = c.Resolve&lt;ClassA&gt;()});
+        builder.Register(c =&gt; new ClassA(c.Resolve&lt;ClassB&gt;()));
+        IContainer container = builder.Build();
+        Assert.Throws(typeof(DependencyResolutionException), ()=&gt;container.Resolve&lt;ClassA&gt;());
+    }
+</code></pre>
+
+<p><code>
+可以部分的解决这种循环依赖的问题，前提是ClassA和ClassB的生命周期不能都是InstancePerDependency
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void circular_dependencies_ok()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;ClassB&gt;().
+            PropertiesAutowired(PropertyWiringFlags.AllowCircularDependencies).SingleInstance();
+        builder.Register(c =&gt; new ClassA(c.Resolve&lt;ClassB&gt;()));
+        IContainer container = builder.Build();
+        Assert.NotNull(container.Resolve&lt;ClassA&gt;());
+        Assert.NotNull(container.Resolve&lt;ClassB&gt;());
+        Assert.NotNull(container.Resolve&lt;ClassB&gt;().A);
+    }
+</code></pre>
+
+<p>```</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AutoFac使用方法总结:Part I]]></title>
+    <link href="http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test/"/>
+    <updated>2012-04-06T23:07:00+08:00</updated>
+    <id>http://niuyi.github.com/blog/2012/04/06/autofac-by-unit-test</id>
+    <content type="html"><![CDATA[<p>AutoFac是.net平台下的IOC容器产品，它可以管理类之间的复杂的依赖关系。在使用方面主要是register和resolve两类操作。
+这篇文章用单元测试的形式列举了AutoFac的常用使用方法：</p>
+
+<!-- more -->
+
+
+<h3>注册部分</h3>
+
+
+<p>使用RegisterType进行注册
+``` c#</p>
+
+<pre><code>    [Fact]
+    public void can_resolve_myclass()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyClass&gt;();
+
+        IContainer container = builder.Build();
+        var myClass = container.Resolve&lt;MyClass&gt;();
+        Assert.NotNull(myClass);
+    }
+</code></pre>
+
+<p>```</p>
+
+<p>注册为接口
+``` c#</p>
+
+<pre><code>    [Fact]
+    public void register_as_interface()
+    {
+        var builder = new ContainerBuilder();
+        builder.Register(c =&gt; new MyClass()).As&lt;MyInterface&gt;();
+
+        IContainer container = builder.Build();
+        Assert.NotNull(container.Resolve&lt;MyInterface&gt;());
+        Assert.Throws(typeof (ComponentNotRegisteredException), () =&gt; container.Resolve&lt;MyClass&gt;());
+    }
+</code></pre>
+
+<p>```</p>
+
+<p>使用lambda表达式进行注册
+``` c#</p>
+
+<pre><code>    [Fact]
+    public void can_register_with_lambda()
+    {
+        var builder = new ContainerBuilder();
+        builder.Register(c =&gt; new MyClass());
+
+        IContainer container = builder.Build();
+        var myClass = container.Resolve&lt;MyClass&gt;();
+        Assert.NotNull(myClass);
+    }
+</code></pre>
+
+<p>```
+带构造参数的注册</p>
+
+<p>``` c#</p>
+
+<pre><code>    [Fact]
+    public void register_with_parameter()
+    {
+        var builder = new ContainerBuilder();
+        builder.Register(c =&gt; new MyParameter());
+        builder.Register(c =&gt; new MyClass(c.Resolve&lt;MyParameter&gt;()));
+        IContainer container = builder.Build();
+        Assert.NotNull(container.Resolve&lt;MyClass&gt;());
+    }   
+</code></pre>
+
+<p>```</p>
+
+<p>带属性赋值的注册
+``` c#</p>
+
+<pre><code>    [Fact]
+    public void register_with_property()
+    {
+        var builder = new ContainerBuilder();
+        builder.Register(c =&gt; new MyProperty());
+        builder.Register(
+            c =&gt; new MyClass()
+                     {
+                         Property = c.Resolve&lt;MyProperty&gt;()
+                     });
+        IContainer container = builder.Build();
+        var myClass = container.Resolve&lt;MyClass&gt;();
+        Assert.NotNull(myClass);
+        Assert.NotNull(myClass.Property);
+    }       
+</code></pre>
+
+<p><code>
+Autofac分离了类的创建和使用，这样可以根据输入参数（NamedParameter）动态的选择实现类。
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void select_an_implementer_based_on_parameter_value()
+    {
+        var builder = new ContainerBuilder();
+        builder.Register&lt;IRepository&gt;((c, p) =&gt;
+                             {
+                                 var type = p.Named&lt;string&gt;("type");
+                                 if (type == "test")
+                                 {
+                                     return new TestRepository(); 
+                                 }
+                                 else
+                                 {
+                                     return new DbRepository();
+                                 }
+                             }).As&lt;IRepository&gt;();
+
+        IContainer container = builder.Build();
+        var repository = container.Resolve&lt;IRepository&gt;(new NamedParameter("type", "test"));
+        Assert.Equal(typeof(TestRepository),repository.GetType());
+    }
+</code></pre>
+
+<p><code>
+AufoFac也可以用一个实例来注册，比如用在单例模式情况下：
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void register_with_instance()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterInstance(MyInstance.Instance).ExternallyOwned();
+        IContainer container = builder.Build();
+        var myInstance1 = container.Resolve&lt;MyInstance&gt;();
+        var myInstance2 = container.Resolve&lt;MyInstance&gt;();
+        Assert.Equal(myInstance1,myInstance2);
+    }
+</code></pre>
+
+<p><code>
+注册open generic类型
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void register_open_generic()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterGeneric(typeof (MyList&lt;&gt;));
+        IContainer container = builder.Build();
+        var myIntList = container.Resolve&lt;MyList&lt;int&gt;&gt;();
+        Assert.NotNull(myIntList);
+        var myStringList = container.Resolve&lt;MyList&lt;string&gt;&gt;();
+        Assert.NotNull(myStringList);
+    }
+</code></pre>
+
+<p><code>
+对于同一个接口，后面注册的实现会覆盖之前的实现
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void register_order()
+    {
+        var containerBuilder = new ContainerBuilder();
+        containerBuilder.RegisterType&lt;DbRepository&gt;().As&lt;IRepository&gt;();
+        containerBuilder.RegisterType&lt;TestRepository&gt;().As&lt;IRepository&gt;();
+
+        IContainer container = containerBuilder.Build();
+        var repository = container.Resolve&lt;IRepository&gt;();
+        Assert.Equal(typeof(TestRepository), repository.GetType());
+    }
+</code></pre>
+
+<p><code>
+如果不想覆盖的话，可以用PreserveExistingDefaults，这样会保留原来注册的实现。
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void register_order_defaults()
+    {
+        var containerBuilder = new ContainerBuilder();
+        containerBuilder.RegisterType&lt;DbRepository&gt;().As&lt;IRepository&gt;();
+        containerBuilder.RegisterType&lt;TestRepository&gt;().As&lt;IRepository&gt;().PreserveExistingDefaults();
+
+        IContainer container = containerBuilder.Build();
+        var repository = container.Resolve&lt;IRepository&gt;();
+        Assert.Equal(typeof (DbRepository), repository.GetType());
+    }
+</code></pre>
+
+<p><code>
+可以用Name来区分不同的实现，代替As方法
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void register_with_name()
+    {
+        var containerBuilder = new ContainerBuilder();
+        containerBuilder.RegisterType&lt;DbRepository&gt;().Named&lt;IRepository&gt;("DB");
+        containerBuilder.RegisterType&lt;TestRepository&gt;().Named&lt;IRepository&gt;("Test");
+
+        IContainer container = containerBuilder.Build();
+        var dbRepository = container.ResolveNamed&lt;IRepository&gt;("DB");
+        var testRepository = container.ResolveNamed&lt;IRepository&gt;("Test");
+        Assert.Equal(typeof(DbRepository), dbRepository.GetType());
+        Assert.Equal(typeof(TestRepository), testRepository.GetType());
+    }
+</code></pre>
+
+<p><code>
+如果一个类有多个构造函数的话，可以在注册时候选择不同的构造函数
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void choose_constructors()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterType&lt;MyParameter&gt;();
+        builder.RegisterType&lt;MyClass&gt;().UsingConstructor(typeof (MyParameter));
+        IContainer container = builder.Build();
+        var myClass = container.Resolve&lt;MyClass&gt;();
+        Assert.NotNull(myClass);
+    }
+</code></pre>
+
+<p><code>
+AutoFac可以注册一个Assemble下所有的类，当然，也可以根据类型进行筛选
+</code> c#</p>
+
+<pre><code>    [Fact]
+    public void register_assembly()
+    {
+        var builder = new ContainerBuilder();
+        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).
+            Where(t =&gt; t.Name.EndsWith("Repository")).
+            AsImplementedInterfaces();
+
+        IContainer container = builder.Build();
+        var repository = container.Resolve&lt;IRepository&gt;();
+        Assert.NotNull(repository);
     }
 </code></pre>
 
