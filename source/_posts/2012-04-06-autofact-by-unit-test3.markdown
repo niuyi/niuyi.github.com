@@ -3,7 +3,7 @@ layout: post
 title: "AutoFac使用方法总结:Part III"
 date: 2012-04-06 23:48
 comments: true
-categories: 
+categories: c#
 ---
 
 <h3>生命周期</h3>
